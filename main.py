@@ -3,13 +3,15 @@
 
 # In[7]:
 
-
 import os
+
+os.system('pip install torch opencv-python matplotlib')
+
 import torch
 import glob
 import cv2 as cv
 import matplotlib.pyplot as plt
-
+import subprocess
 TREINAR = True
 GERACOES = 50
 BATCH = 10
@@ -20,7 +22,7 @@ BATCH = 10
 
 def criar_dir_resultados():
     count = len(glob.glob('runs/train/*'))
-    get_ipython().run_line_magic('ls', '-l')
+    os.system('ls')
     print(f'Número de diretórios de resultados: {count}')
     if TREINAR:
         DIR_RESULTADOS = f'resultados_{count+1}'
@@ -44,7 +46,7 @@ def detectar(DIR_RESULTADOS, data_path):
     deteccao_dir_count = len(glob.glob('runs/detect/*'))
     DIR_DETECCAO = f'deteccao_{deteccao_dir_count+1}'
     print(DIR_DETECCAO)
-    os.system(f'python detect.py --weights runs/train/{DIR_RESULTADOS}/weights/best.pt     --source {data_path} --name {DIR_DETECCAO}')
+    subprocess.run(['python3', 'detect.py', '--weights',f'runs/train/{DIR_RESULTADOS}/weights/best.pt','--source', data_path, '--name', DIR_DETECCAO])
     return DIR_DETECCAO
 
 def visualizar(DIR_DETECCAO):
@@ -62,16 +64,14 @@ def visualizar(DIR_DETECCAO):
 # In[3]:
 
 
-get_ipython().system('pip3 install roboflow')
+os.system('pip install roboflow')
 from roboflow import Roboflow
 
 if not os.path.exists('yolov5') or not('yolov5' in os.getcwd()):
-    get_ipython().run_line_magic('git', 'clone https://github.com//ultralytics/yolov5.git')
-    get_ipython().run_line_magic('ls', '')
-    get_ipython().run_line_magic('cd', 'yolov5')
-
-if not ('yolov5' in os.getcwd()):
-get_ipython().system('pip3 install -r requirements.txt')
+    subprocess.call(['git', 'clone','https://github.com//ultralytics/yolov5.git'])
+    os.system('ls')
+    os.chdir('yolov5')
+    subprocess.call(['pip3','install', '-r','requirements.txt'])
 
 rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
 project = rf.workspace("ic-xo5gl").project("dados_rpg")
@@ -86,8 +86,10 @@ dataset = project.version(4).download("yolov5")
 
 
 DIR_RESULTADOS = criar_dir_resultados()
-get_ipython().run_line_magic('ls', '')
-get_ipython().system('python3 train.py --data ./Mask-Wearing-4/data.yaml --weights yolov5m.pt --img 640 --epochs {GERACOES} --batch-size {BATCH} --name {DIR_RESULTADOS} --cache ram')
+os.system('ls')
+subprocess.run(['python3', 'train.py','--data', './Mask-Wearing-4/data.yaml',\
+                '--weights','yolov5m.pt', '--img', '640', '--epochs',\
+                f'{GERACOES}', '--batch-size', f'{BATCH}', '--name', DIR_RESULTADOS, '--cache'])
 
 
 # In[5]:
