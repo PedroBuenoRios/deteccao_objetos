@@ -118,8 +118,9 @@ dataset = project.version(4).download("yolov5")
 valid_args = {  "data-path": '--data-path',\
                 "batch-size": '--batch-size',\
                 "epochs": '--epochs',\
-                "results-path": '--results_path'}
-args_values = {"data-path": '', "batch-size": 10, "epochs": 100, "results_path": ''}
+                "results-path": '--results_path',\
+                "train": '--train'}
+args_values = {"data-path": '', "batch-size": 10, "epochs": 100, "results_path": '', "train": True}
 try:
     for index,arg in enumerate(sys.argv):
         if arg in valid_args:
@@ -129,9 +130,10 @@ except:
     print('No valid arguments')
 
 print(arg_values)
+TREINAR = arg_values["train"]
 DIR_RESULTADOS = criar_dir_resultados() if arg_values["results_path"] == '' else arg_values["results_path"]
 os.system('ls')
-treinar(arg_values, arg_values["batch-size"])
+treinar(arg_values, arg_values["batch-size"]) if TREINAR else print('Treinamento não irá ser feito')
 
 # In[5]:
 
