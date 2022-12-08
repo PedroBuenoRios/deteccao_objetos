@@ -3,14 +3,13 @@
 
 # In[7]:
 
-import os
-
-os.system('pip install torch opencv-python matplotlib')
-
 import torch
 import glob
 import cv2 as cv
 import matplotlib.pyplot as plt
+from roboflow import Roboflow
+
+import os
 import subprocess
 from numba import cuda
 TREINAR = True
@@ -64,24 +63,21 @@ def visualizar(DIR_DETECCAO):
 
 # In[3]:
 
-
-os.system('pip install roboflow')
-from roboflow import Roboflow
-
 if not os.path.exists('yolov5') or not('yolov5' in os.getcwd()):
     subprocess.call(['git', 'clone','https://github.com//ultralytics/yolov5.git'])
     os.system('ls')
     os.chdir('yolov5')
     subprocess.call(['pip3','install', '-r','requirements.txt'])
-
+"""
 rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
 project = rf.workspace("ic-xo5gl").project("dados_rpg")
 dataset = project.version(1).download("yolov5")
-
-rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
-project = rf.workspace("joseph-nelson").project("mask-wearing")
-dataset = project.version(4).download("yolov5")
-
+"""
+if not os.path.exists('Mask-Wearing-4')
+    rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
+    project = rf.workspace("joseph-nelson").project("mask-wearing")
+    dataset = project.version(4).download("yolov5")
+    print(dataset)
 
 # In[8]:
 
