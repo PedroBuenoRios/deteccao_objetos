@@ -8,22 +8,21 @@ import sys
 
 if'--help' in sys.argv:
     print(  '--data-path\t Caminho para o dataset, o arquivo .yaml deve estar no diretório raiz do dataset\n'\
-            '--batch-size\t Quantas imagens serão carregadas a cada nova época\n'\
-            '--epochs\t Quantas iterações a rede neural irá rodar\n')
+            + '--batch-size\t (Opicional) Quantas imagens serão carregadas a cada nova época\n'\
+            + '--epochs\t (Opcional) Quantas iterações a rede neural irá rodar\n'\
+            + '--train\t (Opcional) Se irá treinar ou detectar a rede neural\n'\
+            + '--results_path\t (Opcional) Caminho em que será armazenado o resultado do treinamento\n')
     exit(0)
-
-os.system('pip install torch opencv-python matplotlib')
 
 import torch
 import glob
 import cv2 as cv
 import matplotlib.pyplot as plt
+from roboflow import Roboflow
+
 import subprocess
 
 TREINAR = True
-GERACOES = 50
-BATCH = 10
-
 
 
 # In[2]:
@@ -31,9 +30,8 @@ BATCH = 10
 
 def criar_dir_resultados():
     count = len(glob.glob('runs/train/*'))
-    os.system('ls')
     print(f'Número de diretórios de resultados: {count}')
-    if TREINAR:
+    if TREINAR == 'True':
         DIR_RESULTADOS = f'resultados_{count+1}'
     else:
         DIR_RESULTADOS = f'resultados_{count}'
@@ -72,31 +70,27 @@ def visualizar(DIR_DETECCAO):
         plt.axis('off')
         plt.show()
 
-def treinar(args, batch_max):
-    train_cmd = ['python3', 'train.py','--data', args["data_path"]+'/data.yaml',\
+def treinar(args):
+    train_cmd = ['python3', 'train.py','--data', args["data-path"]+'/data.yaml',\
                     '--weights','yolov5m.pt', '--img', '640', '--epochs',\
-                    f'{args["epochs"]}', '--batch-size', f'{args["batch"]}',\
-                    '--name', args["results_path"], '--cache']
+                    f'{args["epochs"]}', '--batch-size', f'{args["batch-size"]}',\
+                    '--name', args["results-path"], '--cache']
     try:
         subprocess.run(train_cmd)
     except RuntimeError as erro:
         if 'CUDA out of memory' in erro:
             torch.cuda.empty_cache()
-            args["batch"] -= 1
-            i = batch_max/args["batch"]
-            for i in range(batch_max):
-                treinar(args, batch_max)
+            args["batch-size"] -= 1
+            treinar(args)
         else: return False
     else:
         return True
 
 # In[3]:
 
+os.chdir('yolov5')
 
-os.system('pip install roboflow')
-from roboflow import Roboflow
-
-if not os.path.exists('yolov5') or not('yolov5' in os.getcwd()):
+if not os.path.exists('yolov5') and not('yolov5' in os.getcwd()):
     subprocess.call(['git', 'clone','https://github.com//ultralytics/yolov5.git'])
     os.system('ls')
     os.chdir('yolov5')
@@ -107,40 +101,38 @@ rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
 project = rf.workspace("ic-xo5gl").project("dados_rpg")
 dataset = project.version(1).download("yolov5")
 """
-
-rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
-project = rf.workspace("joseph-nelson").project("mask-wearing")
-dataset = project.version(4).download("yolov5")
+if not os.path.exists('Mask-Wearing-4'):
+    rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
+    project = rf.workspace("joseph-nelson").project("mask-wearing")
+    dataset = project.version(4).download("yolov5")
 
 
 # In[8]:
 # Recebendo valores passados pelo shell 
-valid_args = {  "data-path": '--data-path',\
-                "batch-size": '--batch-size',\
-                "epochs": '--epochs',\
-                "results-path": '--results_path',\
-                "train": '--train'}
-args_values = {"data-path": '', "batch-size": 10, "epochs": 100, "results_path": '', "train": True}
+valid_args = {  "--data-path",\
+                "--batch-size",\
+                "--epochs",\
+                "--results-path",\
+                "--train"}
+arg_values = {"data-path": '', "batch-size": 10, "epochs": 100, "results-path": '', "train": True}
 try:
     for index,arg in enumerate(sys.argv):
         if arg in valid_args:
-            arg_values[arg] = sys.argv[index+1]
+            arg_values[arg[2:]] = sys.argv[index+1]
             print(arg)
 except:
     print('No valid arguments')
 
 print(arg_values)
 TREINAR = arg_values["train"]
-DIR_RESULTADOS = criar_dir_resultados() if arg_values["results_path"] == '' else arg_values["results_path"]
-os.system('ls')
-treinar(arg_values, arg_values["batch-size"]) if TREINAR else print('Treinamento não irá ser feito')
+DIR_RESULTADOS = criar_dir_resultados() if arg_values["results-path"] == '' else arg_values["results-path"]
+if TREINAR == 'True':
+    treinar(arg_values)
+    mostrar_resultados(DIR_RESULTADOS)
 
 # In[5]:
 
-
-mostrar_resultados(DIR_RESULTADOS)
-
-IMAGE_INFER_DIR = detectar(DIR_RESULTADOS, args_values["data-path"]+'/test/images')
+IMAGE_INFER_DIR = detectar(DIR_RESULTADOS, arg_values["data-path"]+'/test/images')
 visualizar(IMAGE_INFER_DIR)
 
 
