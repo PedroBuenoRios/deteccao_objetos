@@ -13,9 +13,9 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 import subprocess
 from numba import cuda
-TREINAR = False
-GERACOES = 100
-BATCH = 14
+TREINAR = True
+GERACOES = 150
+BATCH = 15
 
 
 # In[2]:
