@@ -12,16 +12,12 @@ if'--help' in sys.argv:
             '--epochs\t Quantas iterações a rede neural irá rodar\n')
     exit(0)
 
-os.system('pip install torch opencv-python matplotlib')
-
 import torch
 import glob
 import cv2 as cv
 import matplotlib.pyplot as plt
 from roboflow import Roboflow
 
-import os
-import subprocess
 from numba import cuda
 
 TREINAR = True
@@ -105,7 +101,7 @@ project = rf.workspace("ic-xo5gl").project("dados_rpg")
 dataset = project.version(1).download("yolov5")
 """
 
-if not os.path.exists('Mask-Wearing-4')
+if not os.path.exists('Mask-Wearing-4'):
     rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
     project = rf.workspace("joseph-nelson").project("mask-wearing")
     dataset = project.version(4).download("yolov5")
