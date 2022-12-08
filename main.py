@@ -12,9 +12,10 @@ import glob
 import cv2 as cv
 import matplotlib.pyplot as plt
 import subprocess
-TREINAR = True
-GERACOES = 50
-BATCH = 10
+from numba import cuda
+TREINAR = False
+GERACOES = 100
+BATCH = 14
 
 
 # In[2]:
@@ -84,12 +85,11 @@ dataset = project.version(4).download("yolov5")
 
 # In[8]:
 
-
 DIR_RESULTADOS = criar_dir_resultados()
-os.system('ls')
-subprocess.run(['python3', 'train.py','--data', './Mask-Wearing-4/data.yaml',\
-                '--weights','yolov5m.pt', '--img', '640', '--epochs',\
-                f'{GERACOES}', '--batch-size', f'{BATCH}', '--name', DIR_RESULTADOS, '--cache'])
+if TREINAR:
+    subprocess.run(['python3', 'train.py','--data', './Mask-Wearing-4/data.yaml',\
+                    '--weights','yolov5m.pt', '--img', '640', '--epochs',\
+                    f'{GERACOES}', '--batch-size', f'{BATCH}', '--name', DIR_RESULTADOS, '--cache'])
 
 
 # In[5]:
@@ -102,7 +102,8 @@ visualizar(IMAGE_INFER_DIR)
 
 
 # In[ ]:
-
+caminhoAtual = os.getcwd()
+os.system(f'scp -r {caminhoAtual}/runs/detect/{IMAGE_INFER_DIR}  pedro@fenix.local:/home/pedro/IC/deteccao_objetos')
 
 
 
