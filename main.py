@@ -81,10 +81,10 @@ def treinar(args):
         if 'CUDA out of memory' in erro:
             torch.cuda.empty_cache()
             args["batch-size"] -= 1
+            print(f'Treinando com batch = {args["batch-size"]} e epochs = {args["epochs"]}')
             treinar(args)
         else: return False
     else:
-        print(f'Treinando com batch = {args["batch-size"]} e epochs = {args["epochs"]}')
         return True
 
 # In[3]:
@@ -125,6 +125,7 @@ arg_values["epochs"] = int(arg_values["epochs"])
 print(arg_values)
 print(TREINAR)
 DIR_RESULTADOS = criar_dir_resultados() if arg_values["results-path"] == '' else arg_values["results-path"]
+args["results-path"] = DIR_RESULTADOS
 if TREINAR:
     treinar(arg_values)
     mostrar_resultados(DIR_RESULTADOS)
