@@ -31,7 +31,7 @@ TREINAR = True
 def criar_dir_resultados():
     count = len(glob.glob('runs/train/*'))
     print(f'Número de diretórios de resultados: {count}')
-    if TREINAR == 'True':
+    if TREINAR:
         DIR_RESULTADOS = f'resultados_{count+1}'
     else:
         DIR_RESULTADOS = f'resultados_{count}'
@@ -84,6 +84,7 @@ def treinar(args):
             treinar(args)
         else: return False
     else:
+        print(f'Treinando com batch = {args["batch-size"]} e epochs = {args["epochs"]}')
         return True
 
 # In[3]:
@@ -96,11 +97,6 @@ if not os.path.exists('yolov5') and not('yolov5' in os.getcwd()):
     os.chdir('yolov5')
     subprocess.call(['pip3','install', '-r','requirements.txt'])
 
-"""
-rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
-project = rf.workspace("ic-xo5gl").project("dados_rpg")
-dataset = project.version(1).download("yolov5")
-"""
 if not os.path.exists('Mask-Wearing-4'):
     rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
     project = rf.workspace("joseph-nelson").project("mask-wearing")
@@ -114,7 +110,7 @@ valid_args = {  "--data-path",\
                 "--epochs",\
                 "--results-path",\
                 "--train"}
-arg_values = {"data-path": '', "batch-size": 10, "epochs": 100, "results-path": '', "train": True}
+arg_values = {"data-path": '', "batch-size": '', "epochs": '', "results-path": '', "train": 'True'}
 try:
     for index,arg in enumerate(sys.argv):
         if arg in valid_args:
@@ -123,10 +119,13 @@ try:
 except:
     print('No valid arguments')
 
+TREINAR = True if arg_values["train"].casefold() == 'true' else False 
+arg_values["batch-size"] = int(arg_values["batch-size"]) 
+arg_values["epochs"] = int(arg_values["epochs"])
 print(arg_values)
-TREINAR = arg_values["train"]
+print(TREINAR)
 DIR_RESULTADOS = criar_dir_resultados() if arg_values["results-path"] == '' else arg_values["results-path"]
-if TREINAR == 'True':
+if TREINAR:
     treinar(arg_values)
     mostrar_resultados(DIR_RESULTADOS)
 
@@ -135,9 +134,9 @@ if TREINAR == 'True':
 IMAGE_INFER_DIR = detectar(DIR_RESULTADOS, arg_values["data-path"]+'/test/images')
 visualizar(IMAGE_INFER_DIR)
 
-
 # In[ ]:
 
-
-
+caminhoAtual = os.getcwd()
+os.system(f'scp -r {caminhoAtual}/runs/detect/{IMAGE_INFER_DIR} pedro@fenix.local:/home/pedro/IC/deteccao_objetos/deteccoes')
+os.system(f'scp -r {caminhoAtual}/runs/train/{DIR_RESULTADOS} pedro@fenix.local:/home/pedro/IC/deteccao_objetos/treinamentos')
 
