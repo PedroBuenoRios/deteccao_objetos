@@ -125,7 +125,7 @@ arg_values["epochs"] = int(arg_values["epochs"])
 print(arg_values)
 print(TREINAR)
 DIR_RESULTADOS = criar_dir_resultados() if arg_values["results-path"] == '' else arg_values["results-path"]
-args["results-path"] = DIR_RESULTADOS
+arg_values["results-path"] = DIR_RESULTADOS
 if TREINAR:
     treinar(arg_values)
     mostrar_resultados(DIR_RESULTADOS)
