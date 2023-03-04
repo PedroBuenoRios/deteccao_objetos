@@ -1,30 +1,23 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 import os
 from utils import *
 from roboflow import Roboflow
-
+import torch
+    
 if __name__ == "__main__":
+    torch.cuda.empty_cache()
     model = YOLOv7(None)
-    #model.train(data='./Mask-Wearing-4', epochs=200, batch_size=15)
 
     datasetPath = getDatasetFromRoboflow('YOLOv7')
 
-    training_params = {
-        'data': datasetPath,
-        'batch-size' : 15,
-        'epochs': 200,
-        'weights': model.weights,
-        'hyp': 'data/hyp.scratch.p5.yaml',
-        'cfg': 'cfg/training/yolov7.yaml',
-    }
-    model.train(**training_params)
+    args = YOLOv7_args()
+    args.train['data'] = f'{datasetPath}/data.yaml'
+    args.train['batch-size'] = 1
+    args.train['epochs'] = 1
+    args.train['weights'] = model.preTrained
+    args.train['hyp'] = './yolov7/data/hyp.scratch.p5.yaml'
+    args.train['cfg'] = './yolov7/cfg/training/yolov7.yaml'
+    args.train['cache-images'] = False
+    args.train['project'] = model.training_workspace
+    args.train['name'] = model.get_new_training_dir()
 
-    inference_params = {
-        'weights': model.weights,
-        'conf': 0.25,
-        'source': '0'
-    }
-
-    model.detect(**inference_params)
+    model.train(args.train)

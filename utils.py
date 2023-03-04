@@ -4,55 +4,144 @@ import sys
 import glob
 import subprocess
 from roboflow import Roboflow
-#from torchvision.models import MobileNetV3, MobileNet_V3_Small_Weights
-#from keras.applications import MobileNetV3Large
-#from keras.models import Sequential
-#from keras.callbacks import ModelCheckpoint
+import datetime
 
+class YOLOv7_args:
+    def __init__(self):
+        self.train = {
+            'weights' : 'yolov7.pt',
+            'cfg' : '',
+            'data': '',
+            'hyp' : '',
+            'epochs' : 100,
+            'batch-size' : 15,
+            'img-size' : 640,
+            'rect': False,
+            'resume' : False,
+            'nosave' : False,
+            'notest' : False,
+            'noautoanchor' : False,
+            'evolve' : False,
+            'bucket' : '',
+            'cache-images' : True,
+            'image-weights' : False,
+            'device' : '',
+            'multi-scale' : False,
+            'single-cls' : False,
+            'adam' : False,
+            'sync-bn' : False,
+            'local_rank' : -1,
+            'workers' : 8,
+            'project' : './yolov7/runs/train',
+            'entity' : None,
+            'name' : './yolov7/runs/train/exp',
+            'exist-ok': False,
+            'quad' : False,
+            'linar-lr' : False,
+            'label-smoothing' : 0.0,
+            'upload_dataset' : False,
+            'bbox_interval' : -1,
+            'save_period' : -1,
+            'artifact_alias' : 'latest',
+            'freeze' : 0,
+            'v5-metric': False 
+        }
+        self.detect = {}
 
-class YOLOv7:
-    def __init__(self, weights='yolov7x_training.pt'):
-        self.weights = weights
-        self.dir = os.getcwd()
-        print(self.dir)
+class Detector:
+    def __init__(self, preTrained):
+        self.workspace = os.getcwd()
+        self.training_workspace = self.workspace
+        self.detections_workspace = self.workspace 
+        self.preTrained = preTrained
 
+    def train(self):
+        return
+
+    def detect(self):
+        return
+
+    def deploy(self):
+        return
+
+    # Retorna o caminho para o melhor peso, o diretório de treinamento precisa ser passado
+    def get_best_weights(self, path:str):
+        return f'{path}/weights/best.pt'
+
+    # Retorna o último diretório de treinamento
+    def get_last_training_dir(self):
+        amt = len(glob.glob(f'{self.training_workspace}/exp*'))
+        return f'{self.training_workspace}/exp{amt}'
+
+    # Retorna um diretório novo para treinamento
+    def get_new_training_dir(self):
+        amt = len(glob.glob(f'{self.training_workspace}/exp*'))
+        return f'{self.training_workspace}/exp{amt+1}'
+
+    # Escreve um relatório de um processo    
+    def logOutputAndError(process, path:str):
+        with open(f'{path}/log.txt', 'x') as fileLog:
+            fileLog.write(f'date: {datetime.datetime.now()}\n')
+            fileLog.write(f'Command:\n{process.args}\n')
+            fileLog.write(f'OutPut:\n{process.stdout}\n')
+            fileLog.write(f'Error:\n{process.stderr}\n')
+            fileLog.close()
+
+class YOLOv7(Detector):
+    def __init__(self, preTrained:str='yolov7.pt'):
+        super().__init__(preTrained)
+        self.training_workspace = f'{self.workspace}/yolov7/runs/trains'
+        self.detections_workspace = f'{self.workspace}/yolov7/runs/detections'
+        # Clona o repositório do yolov7 se ele não está presente no diretório atual
         if not os.path.exists('yolov7'):
             subprocess.run(['git', 'clone', 'https://github.com/WongKinYiu/yolov7'])
-            subprocess.run(['pip', '-r', 'install', f'{self.dir}/yolov7.requirements.txt'])
-
-        if self.weights == None:
-            self.weights = '\'\''
+            subprocess.run(['pip3', '-r', 'install', f'{self.workspace}/yolov7.requirements.txt'])
+        # Realiza o download dos pesos para treinamento se necessário
+        if self.preTrained == None:
+            self.preTrained = '\'\''
         else:
             os.system(
-                f'wget -nc -P {self.dir}/yolov7/weights https://github.com/WongKinYiu/yolov7/releases/download/v0.1/{self.weights}')
-
-    def train(self, **kwargs):
-        self.training_args = kwargs
-        cmd = ['python',  f'{self.dir}/yolov7/train.py']
-        for item, value in kwargs.items():
-            cmd.append(f'--{item}')
-            cmd.append(f'{value}')
+                f'wget -nc -P {self.workspace}/yolov7/weights https://github.com/WongKinYiu/yolov7/releases/download/v0.1/{self.preTrained}')
+            self.preTrained = f'{self.workspace}/yolov7/weights/{self.preTrained}'
+   
+    def train(self, args:dict):
+        # Geração do comando para treinamento
+        cmd = ['python3',  f'{self.workspace}/yolov7/train.py']
+        for item, value in args.items():
+            if type(value) != bool:
+                cmd.append(f'--{item}')
+                cmd.append(f'{value}')
+            elif value:
+                cmd.append(f'--{item}')
         print(cmd)
-        subprocess.run(cmd)
+        resp = subprocess.run(cmd, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        logOutputAndError(resp, self.get_last_training_dir())
     
     def detect(self, **kwargs):
-        cmd = ['python', f'{self.dir}/yolov7/detect.py']
+        cmd = ['python3', f'{self.dir}/yolov7/detect.py']
         for item, value in kwargs.items():
             cmd.append(f'--{item}')
             cmd.append(f'{value}')
         print(cmd)
         subprocess.run(cmd)
 
-
-class MobileNet:
+class YOLOv6(Detector):
     def __init__(self):
-        #self.model = MobileNetV3Large(weights='None', classes=2)
-        #self.model.compile()
-        return
-
+        super().__init__(preTrained)
+        self.training_workspace = self.workspace + '/yolov6/runs/trains/'
+        self.detections_workspace = self.workspace + '/yolov6/runs/detections/'
+        self.preTrained = preTrained
+        self.batch = 8
+        self.epochs = 200
+    
     def train(self, **kwargs):
-        return
+        print(kwargs)
 
+    def detect(self, **kwargs):
+        print(kwargs)
+
+    def deploy(self, **kwargs):
+        print
 
 def getDatasetFromRoboflow(model):
     folderPath = ''
