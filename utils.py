@@ -4,55 +4,45 @@ import sys
 import glob
 import subprocess
 from roboflow import Roboflow
-#from torchvision.models import MobileNetV3, MobileNet_V3_Small_Weights
-#from keras.applications import MobileNetV3Large
-#from keras.models import Sequential
-#from keras.callbacks import ModelCheckpoint
-
 
 class YOLOv7:
-    def __init__(self, weights='yolov7x_training.pt'):
+    def __init__(self, weights='yolov7.pt'):
         self.weights = weights
         self.dir = os.getcwd()
         print(self.dir)
 
-        if not os.path.exists('yolov7'):
+        if not os.path.exists('yolov7'): 
             subprocess.run(['git', 'clone', 'https://github.com/WongKinYiu/yolov7'])
-            subprocess.run(['pip', '-r', 'install', f'{self.dir}/yolov7.requirements.txt'])
+            subprocess.run(['pip3', '-r', 'install', f'{self.dir}/yolov7.requirements.txt'])
 
         if self.weights == None:
-            self.weights = '\'\''
+            self.weights = ''
         else:
             os.system(
                 f'wget -nc -P {self.dir}/yolov7/weights https://github.com/WongKinYiu/yolov7/releases/download/v0.1/{self.weights}')
+            self.weights = f'{self.dir}/yolov7/weights/{self.weights}'
 
     def train(self, **kwargs):
         self.training_args = kwargs
-        cmd = ['python',  f'{self.dir}/yolov7/train.py']
+        cmd = ['python3',  f'{self.dir}/yolov7/train.py']
         for item, value in kwargs.items():
-            cmd.append(f'--{item}')
-            cmd.append(f'{value}')
+            if type(value) != bool:
+                cmd.append(f'--{item}')
+                cmd.append(f'{value}')
+            elif value:
+                cmd.append(f'--{item}')
+                
         print(cmd)
         subprocess.run(cmd)
-    
+        
+
     def detect(self, **kwargs):
-        cmd = ['python', f'{self.dir}/yolov7/detect.py']
+        cmd = ['python3', f'{self.dir}/yolov7/detect.py']
         for item, value in kwargs.items():
             cmd.append(f'--{item}')
             cmd.append(f'{value}')
         print(cmd)
         subprocess.run(cmd)
-
-
-class MobileNet:
-    def __init__(self):
-        #self.model = MobileNetV3Large(weights='None', classes=2)
-        #self.model.compile()
-        return
-
-    def train(self, **kwargs):
-        return
-
 
 def getDatasetFromRoboflow(model):
     folderPath = ''
@@ -91,3 +81,5 @@ def convert_coco_to_yolo(coco_annotation_file, yolo_annotation_file):
     with open(yolo_annotation_file, 'w') as f:
         for line in yolo_annotations:
             f.write(f"{line}\n")
+
+
