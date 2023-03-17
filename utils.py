@@ -56,53 +56,46 @@ class Detector:
         self.preTrained = preTrained
 
     def train(self):
-        return
+        pass
 
     def detect(self):
-        return
+        pass
 
     def deploy(self):
-        return
+        pass
 
     # Retorna o caminho para o melhor peso, o diretório de treinamento precisa ser passado
-    def get_best_weights(self, path:str):
+    def get_best_weights(self, path:str) -> str:
         return f'{path}/weights/best.pt'
 
     # Retorna o último diretório de treinamento
-    def get_last_training_dir(self):
+    def get_last_training_dir(self) -> str:
         amt = len(glob.glob(f'{self.training_workspace}/exp*'))
         return f'{self.training_workspace}/exp{amt}'
 
     # Retorna um diretório novo para treinamento
-    def get_new_training_dir(self):
+    def get_new_training_dir(self) -> str:
         amt = len(glob.glob(f'{self.training_workspace}/exp*'))
         return f'{self.training_workspace}/exp{amt+1}'
 
-    # Escreve um relatório de um processo    
-    def logOutputAndError(process, path:str):
-        with open(f'{path}/log.txt', 'x') as fileLog:
-            fileLog.write(f'date: {datetime.datetime.now()}\n')
-            fileLog.write(f'Command:\n{process.args}\n')
-            fileLog.write(f'OutPut:\n{process.stdout}\n')
-            fileLog.write(f'Error:\n{process.stderr}\n')
-            fileLog.close()
-
 class YOLOv7(Detector):
-    def __init__(self, preTrained:str='yolov7.pt'):
+    def __init__(self, preTrained:str='yolov7'):
         super().__init__(preTrained)
         self.training_workspace = f'{self.workspace}/yolov7/runs/trains'
         self.detections_workspace = f'{self.workspace}/yolov7/runs/detections'
         # Clona o repositório do yolov7 se ele não está presente no diretório atual
         if not os.path.exists('yolov7'):
             subprocess.run(['git', 'clone', 'https://github.com/WongKinYiu/yolov7'])
-            subprocess.run(['pip3', '-r', 'install', f'{self.workspace}/yolov7.requirements.txt'])
+            subprocess.run(['pip3', 'install','-r', f'{self.workspace}/yolov7.requirements.txt'])
         # Realiza o download dos pesos para treinamento se necessário
         if self.preTrained == None:
             self.preTrained = '\'\''
         else:
-            os.system(
-                f'wget -nc -P {self.workspace}/yolov7/weights https://github.com/WongKinYiu/yolov7/releases/download/v0.1/{self.preTrained}')
-            self.preTrained = f'{self.workspace}/yolov7/weights/{self.preTrained}'
+            subprocess.run(
+                ['wget', '-nc', '-P',
+                f'{self.workspace}/yolov7/weights', 
+                f'https://github.com/WongKinYiu/yolov7/releases/download/v0.1/{self.preTrained}.pt'])
+            self.preTrained = f'{self.workspace}/yolov7/weights/{self.preTrained}.pt'
    
     def train(self, args:dict):
         # Geração do comando para treinamento
@@ -113,9 +106,10 @@ class YOLOv7(Detector):
                 cmd.append(f'{value}')
             elif value:
                 cmd.append(f'--{item}')
-        print(cmd)
-        resp = subprocess.run(cmd, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        logOutputAndError(resp, self.get_last_training_dir())
+        try:
+            subprocess.run(cmd)
+        except:
+            pass
     
     def detect(self, **kwargs):
         cmd = ['python3', f'{self.dir}/yolov7/detect.py']
@@ -126,16 +120,33 @@ class YOLOv7(Detector):
         subprocess.run(cmd)
 
 class YOLOv6(Detector):
-    def __init__(self):
+    def __init__(self, preTrained='yolov6m'):
         super().__init__(preTrained)
-        self.training_workspace = self.workspace + '/yolov6/runs/trains/'
-        self.detections_workspace = self.workspace + '/yolov6/runs/detections/'
-        self.preTrained = preTrained
-        self.batch = 8
-        self.epochs = 200
-    
-    def train(self, **kwargs):
-        print(kwargs)
+        self.training_workspace = f'{self.workspace}/yolov6/runs/trains/'
+        self.detections_workspace = f'{self.workspace}/yolov6/runs/detections/'
+        if not os.path.exists('./yolov6'):
+            subprocess.run(['git', 'clone', 'https://github.com/meituan/yolov6'])
+            subprocess.run(['pip3', 'install', '-r', f'{self.workspace}/yolov6/requirements.txt'])
+        if self.preTrained == None:
+            self.preTrained = '\'\''
+        else:
+            subprocess.run(['wget', '-nc', '-P',
+                f'{self.workspace}/yolov6/weights',
+                f'https://github.com/meituan/YOLOv6/releases/download/0.3.0/{self.preTrained}.pt'])
+            self.preTrained = f'{self.workspace}/yolov6/weights/{self.preTrained}.pt'
+
+    def train(self, args:dict):
+        cmd = ['python3', f'{self.workspace}/yolov6/tools/train.py']
+        for item,value in args.items():
+            if type(value) != bool:
+                cmd.append(f'--{item}')
+                cmd.append(f'{value}')
+            elif value:
+                cmd.append(f'--{item}')
+            try:
+                subprocess.run(cmd)
+            except:
+                pass
 
     def detect(self, **kwargs):
         print(kwargs)
@@ -152,6 +163,13 @@ def getDatasetFromRoboflow(model):
                 rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
                 project = rf.workspace("joseph-nelson").project("mask-wearing")
                 dataset = project.version(19).download("yolov7", folderPath)
+    if model == 'YOLOv6':
+        folderName = 'Mask-Wearing-19-YOLOv6'
+        folderPath = f'{os.getcwd()}/{folderName}'
+        if not os.path.exists(folderName):
+                rf = Roboflow(api_key="nc0bgygPzfvks88x2Dsv")
+                project = rf.workspace("joseph-nelson").project("mask-wearing")
+                dataset = project.version(19).download("mt-yolov6", folderPath)
     if model == 'COCO':
         folderName = 'Mask-Wearing-19-COCO'
         folderPath = f'{os.getcwd()}/{folderName}'
@@ -160,23 +178,3 @@ def getDatasetFromRoboflow(model):
                 project = rf.workspace("joseph-nelson").project("mask-wearing")
                 dataset = project.version(19).download("coco", folderPath)
     return folderPath
-
-def convert_coco_to_yolo(coco_annotation_file, yolo_annotation_file):
-    with open(coco_annotation_file, 'r') as f:
-        coco_annotations = json.load(f)
-
-    yolo_annotations = []
-    for image in coco_annotations['images']:
-        image_id = image['id']
-        for annotation in coco_annotations['annotations']:
-            if annotation['image_id'] == image_id:
-                x, y, w, h = annotation['bbox']
-                x_center = x + w / 2
-                y_center = y + h / 2
-                class_id = annotation['category_id']
-                yolo_annotations.append(
-                    f"{class_id} {x_center} {y_center} {w} {h}")
-
-    with open(yolo_annotation_file, 'w') as f:
-        for line in yolo_annotations:
-            f.write(f"{line}\n")
