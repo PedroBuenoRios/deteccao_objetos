@@ -1,0 +1,58 @@
+
+yolov7: {
+  opt0: {
+    weights: yolov7x.pt,
+    cfg: cfg/training/yolov7x.yaml,
+    data: ../Mask-Wearing-19-YOLOv7/data.yaml,
+    hyp: data/hyp.scratch.p5.yaml,
+    img-size: 480,
+    cache-images: True,
+    epochs: 100,
+    adam: True,
+    batch-size: 5
+  },
+  opt1: {
+    weights: yolov7.pt,
+    cfg: cfg/training/yolov7.yaml,
+    data: ../Mask-Wearing-19-YOLOv7/data.yaml,
+    hyp: data/hyp.scratch.p5.yaml,
+    img-size: 480,
+    epochs: 100,
+    cache-images: True,
+    batch-size: 10,
+    adam: True
+  },
+  opt2: {
+    weights: '''',
+    cfg: cfg/training/yolov7.yaml,
+    data: ../Mask-Wearing-19-YOLOv7/data.yaml,
+    hyp: data/hyp.scratch.p5.yaml,
+    img-size: 480,
+    adam: True,
+    epochs: 100,
+    batch-size: 10
+  },
+op3: {
+    weights: '''',
+    cfg: cfg/training/yolov7.yaml,
+    data: ../Mask-Wearing-19-YOLOv7/data.yaml,
+    hyp: data/hyp.scratch.p5.yaml,
+    img-size: 480,
+    adam: True,
+    epochs: 100,
+    batch-size: 10,
+    freeze: 3 
+  }
+}
+yolov6: {
+  opt0: {
+    batch-size: 5,
+    epochs: 100,
+    img-size: 480,
+    conf-file: ./configs/yolov6m_finetune.py,
+    data-path: ../Mask-Wearing-19-YOLOv6/data.yaml,
+    fuse_ab: True,
+    device: 0
+  }
+}
+

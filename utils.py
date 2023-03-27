@@ -96,11 +96,54 @@ class YOLOv7(Detector):
                 f'{self.workspace}/yolov7/weights', 
                 f'https://github.com/WongKinYiu/yolov7/releases/download/v0.1/{self.preTrained}.pt'])
             self.preTrained = f'{self.workspace}/yolov7/weights/{self.preTrained}.pt'
-   
+        os.chdir('yolov7')
+
     def train(self, args:dict):
         # Geração do comando para treinamento
-        cmd = ['python3',  f'{self.workspace}/yolov7/train.py']
+        cmd = ['python3',  f'train.py']
         for item, value in args.items():
+            if type(value) != bool:
+                cmd.append(f'--{item}')
+                cmd.append(f'{value}')
+            elif value:
+                cmd.append(f'--{item}')
+        try:
+            subprocess.run(cmd)
+            input()
+        except:
+            pass
+    
+    def detect(self, args: dict):
+        cmd = ['python3', f'detect.py']
+        for item, value in args.items():
+            if type(value) != bool:
+                cmd.append(f'--{item}')
+                cmd.append(f'{value}')
+            elif value:
+                cmd.append(f'--{item}')
+        subprocess.run(cmd)
+
+class YOLOv6(Detector):
+    def __init__(self, preTrained='yolov6m'):
+        super().__init__(preTrained)
+        self.workspace = f'{self.workspace}/yolov6'
+        self.training_workspace = f'{self.workspace}/runs/trains/'
+        self.detections_workspace = f'{self.workspace}/runs/detections/'
+        if not os.path.exists('./yolov6'):
+            subprocess.run(['git', 'clone', 'https://github.com/meituan/yolov6'])
+            subprocess.run(['pip3', 'install', '-r', f'{self.workspace}/requirements.txt'])
+        if self.preTrained == None:
+            self.preTrained = '\'\''
+        else:
+            subprocess.run(['wget', '-nc', '-P',
+                f'{self.workspace}/weights',
+                f'https://github.com/meituan/YOLOv6/releases/download/0.3.0/{self.preTrained}.pt'])
+            self.preTrained = f'{self.workspace}/weights/{self.preTrained}.pt'
+
+    def train(self, args:dict):
+        os.chdir('yolov6')
+        cmd = ['python', f'tools/train.py']
+        for item,value in args.items():
             if type(value) != bool:
                 cmd.append(f'--{item}')
                 cmd.append(f'{value}')
@@ -110,43 +153,6 @@ class YOLOv7(Detector):
             subprocess.run(cmd)
         except:
             pass
-    
-    def detect(self, **kwargs):
-        cmd = ['python3', f'{self.dir}/yolov7/detect.py']
-        for item, value in kwargs.items():
-            cmd.append(f'--{item}')
-            cmd.append(f'{value}')
-        print(cmd)
-        subprocess.run(cmd)
-
-class YOLOv6(Detector):
-    def __init__(self, preTrained='yolov6m'):
-        super().__init__(preTrained)
-        self.training_workspace = f'{self.workspace}/yolov6/runs/trains/'
-        self.detections_workspace = f'{self.workspace}/yolov6/runs/detections/'
-        if not os.path.exists('./yolov6'):
-            subprocess.run(['git', 'clone', 'https://github.com/meituan/yolov6'])
-            subprocess.run(['pip3', 'install', '-r', f'{self.workspace}/yolov6/requirements.txt'])
-        if self.preTrained == None:
-            self.preTrained = '\'\''
-        else:
-            subprocess.run(['wget', '-nc', '-P',
-                f'{self.workspace}/yolov6/weights',
-                f'https://github.com/meituan/YOLOv6/releases/download/0.3.0/{self.preTrained}.pt'])
-            self.preTrained = f'{self.workspace}/yolov6/weights/{self.preTrained}.pt'
-
-    def train(self, args:dict):
-        cmd = ['python3', f'{self.workspace}/yolov6/tools/train.py']
-        for item,value in args.items():
-            if type(value) != bool:
-                cmd.append(f'--{item}')
-                cmd.append(f'{value}')
-            elif value:
-                cmd.append(f'--{item}')
-            try:
-                subprocess.run(cmd)
-            except:
-                pass
 
     def detect(self, **kwargs):
         print(kwargs)
